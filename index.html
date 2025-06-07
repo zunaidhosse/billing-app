@@ -1,0 +1,232 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Restaurant POS</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#e0e5ec"/>
+</head>
+<body>
+    <div id="app-container">
+        <header>
+            <h1 id="header-title">All Tables</h1>
+            <div class="header-actions">
+                <button id="admin-btn" class="header-btn"><img src="settings.png" alt="Settings"></button>
+            </div>
+        </header>
+
+        <main>
+            <!-- Tables View -->
+            <div id="tables-view" class="view active">
+                <div id="tables-grid"></div>
+                <div class="view-footer">
+                    <button id="history-btn" class="footer-btn"><img src="all_history.png" alt="History"> <span>History</span></button>
+                    <button id="catalog-btn" class="footer-btn"><img src="catalog.png" alt="Catalog"> <span>Catalog & Items</span></button>
+                </div>
+            </div>
+
+            <!-- Order View -->
+            <div id="order-view" class="view">
+                <div class="order-header">
+                    <button id="back-to-tables-btn">&larr; Back to Tables</button>
+                </div>
+                <div class="order-layout">
+                    <div id="menu-section">
+                        <div id="menu-categories"></div>
+                        <div id="menu-items"></div>
+                    </div>
+                    <div id="bill-section">
+                        <div class="bill-header">
+                            <h3 id="bill-table-title"></h3>
+                            <div id="bill-table-status"></div>
+                        </div>
+                        <div id="order-list-container">
+                            <div id="order-list"></div>
+                        </div>
+                        <div id="bill-summary">
+                            <div><span>Subtotal:</span> <span id="subtotal">0.00</span></div>
+                            <div><span>Tax (2%):</span> <span id="tax">0.00</span></div>
+                            <div><span>Total:</span> <span id="total" class="total-amount">0.00</span></div>
+                            <div id="amount-paid-container" class="hidden"><span>Paid:</span> <span id="amount-paid">0.00</span></div>
+                            <div id="balance-due-container" class="hidden"><span>Balance:</span> <span id="balance-due" class="total-amount">0.00</span></div>
+                        </div>
+                        <div id="bill-actions">
+                            <button id="pay-btn"><img src="money.png" alt="Pay"> Pay</button>
+                            <button id="print-bill-btn"><img src="print.png" alt="Print"> Print Bill</button>
+                            <button id="split-bill-btn"><img src="split.png" alt="Split"> Split Bill</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-backdrop" class="hidden"></div>
+
+    <!-- Admin Modal -->
+    <div id="admin-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Admin Settings</h2>
+                <button class="close-modal-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="admin-section">
+                    <h3>Table Management</h3>
+                    <p class="admin-note">Add or remove tables one by one.</p>
+                    <div id="table-editor">
+                         <div id="table-list"></div>
+                         <div class="table-form">
+                            <h4>Add New Table</h4>
+                            <input type="text" id="table-name" placeholder="New Table Name">
+                            <button id="add-table-btn">Add Table</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="admin-section">
+                    <h3>General Settings</h3>
+                    <label for="table-count">Number of Tables (destructive):</label>
+                    <input type="number" id="table-count" min="1" max="100">
+                    <p class="admin-note">Warning: Changing this number will reset all current tables and orders.</p>
+                </div>
+                <div class="admin-section">
+                    <h3>Menu Management</h3>
+                    <div id="menu-editor">
+                        <div id="menu-item-list"></div>
+                        <div class="menu-item-form">
+                            <h4>Add/Edit Item</h4>
+                            <input type="hidden" id="menu-item-id">
+                            <input type="text" id="menu-item-name" placeholder="Item Name">
+                            <input type="text" id="menu-item-category" placeholder="Category">
+                            <input type="number" id="menu-item-price" placeholder="Price" min="0">
+                            <button id="save-menu-item-btn">Save Item</button>
+                            <button id="clear-menu-form-btn">New Item</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+             <div class="modal-footer">
+                <button id="save-settings-btn">Save and Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div id="payment-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Payment</h2>
+                <button class="close-modal-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Total Due: <span id="payment-total" class="total-amount">0.00</span></p>
+                <label for="payment-amount">Amount Tendered:</label>
+                <input type="number" id="payment-amount" placeholder="Enter amount" min="0">
+                 <div class="quick-cash-buttons"></div>
+                <p>Change Due: <span id="change-due" class="total-amount">0.00</span></p>
+            </div>
+            <div class="modal-footer">
+                <button id="process-payment-btn" disabled>Process Payment</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Split Bill Modal -->
+    <div id="split-bill-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Split Bill</h2>
+                <button class="close-modal-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Select items to pay for separately.</p>
+                <div id="split-bill-items"></div>
+                <div class="split-bill-summary">
+                    Total for selected: <span id="split-total" class="total-amount">0.00</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="pay-split-bill-btn" disabled>Pay for Selected Items</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Receipt Modal -->
+    <div id="receipt-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Bill Receipt</h2>
+                <button class="close-modal-btn">&times;</button>
+            </div>
+            <div class="modal-body" id="receipt-modal-body">
+                <div id="receipt-paper">
+                    <!-- Receipt content will be generated here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="download-receipt-btn">Download as Image</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Modal -->
+    <div id="history-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Order History</h2>
+                <button class="close-modal-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Click on an entry to view the receipt.</p>
+                <div id="history-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Catalog Modal -->
+    <div id="catalog-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Catalog & Items</h2>
+                <button class="close-modal-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="catalog-editor">
+                    <div id="catalog-item-list"></div>
+                    <div class="menu-item-form">
+                        <h4>Add/Edit Item</h4>
+                        <input type="hidden" id="catalog-item-id">
+                        <input type="text" id="catalog-item-name" placeholder="Item Name">
+                        <input type="text" id="catalog-item-category" placeholder="Category">
+                        <input type="number" id="catalog-item-price" placeholder="Price" min="0">
+                        <button id="save-catalog-item-btn">Save Item</button>
+                        <button id="clear-catalog-form-btn">New Item</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "./state.js": "./state.js",
+            "./ui.js": "./ui.js",
+            "./handlers.js": "./handlers.js",
+            "./db.js": "./db.js",
+            "./receipt.js": "./receipt.js",
+            "./modal-utils.js": "./modal-utils.js",
+            "./menu-management.js": "./menu-management.js",
+            "./adminModal.js": "./adminModal.js",
+            "./catalogModal.js": "./catalogModal.js",
+            "./paymentModal.js": "./paymentModal.js",
+            "./splitBillModal.js": "./splitBillModal.js",
+            "./historyModal.js": "./historyModal.js"
+        }
+    }
+    </script>
+    <script type="module" src="script.js"></script>
+</body>
+</html>
